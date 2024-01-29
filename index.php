@@ -1,55 +1,43 @@
 <?php
-    include_once __DIR__.'/db/db.php';
-
-    $user = null;
+    include_once '../db.php';
     
-    if (check_auth() ) 
+    if(isset($_POST) )
     {
-        $stmt = pdo()->prepare("SELECT * FROM `accounts` WHERE `id` = :id");
-        $stmt->execute(['id' => $_SESSION['usr_id']]);
+        try
+        {
+            $name       = $_POST['reg_name'];
+            $surname    = $_POST['reg_surname'];
+            $patronymic = $_POST['reg_patronymic'];
+            $phone      = $_POST['reg_phone'];
+            $email      = $_POST['reg_email'];
+            $login      = $_POST['reg_login'];
+            $password   = $_POST['reg_password'];
 
-        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+            $sql = "INSERT INTO accounts (name, surname, patronymic, phone, email, login, password)
+            VALUES (:name, :surname, :patronymic, :phone, :email, :login, :password)";
+            
+            try 
+            {
+                pdo()->prepare($sql)->execute( 
+                    array(
+                        ":name" => $name, 
+                        ":surname" => $surname, 
+                        ":patronymic" => $patronymic, 
+                        ":phone" => $phone, 
+                        ":email" => $email, 
+                        ":login" => $login, 
+                        ":password" => $password
+                    ) 
+                );
+
+                echo "data has been sended to database!";
+            }
+            catch(PDOException $e) {
+                print "Statement Error!: " . $e->getMessage();
+            }
+        }
+        catch (PDOException $e) {
+            print "Database error: " . $e->getMessage();
+        }
     }
 ?>
-
-<!DOCTYPE html>
-<html lang="en">
-	<head>
-		<meta charset="UTF-8">
-		<meta name="viewport" content="width=device-width, initial-scale=1.0">
-		<title>Главная</title>
-		<link rel="stylesheet" href="css/main.css">
-	</head>
-	<body>
-        <header>
-            <?php 
-                if ($user != null) 
-                { 
-            ?>
-            <div class="header-wrapper">
-                <div class="current-user">
-                    <p><?=$user['login']?></p>
-                </div>
-
-                <button class="loginbutton"><a href="login.html">выйти</a></button>
-            <?php 
-                } 
-                else 
-                { 
-                    header("Location: ../login.html");
-                }
-            ?>
-            </div>
-        </header>
-        <div class="main-container">
-            <form action="db/reviews/handler.php" method="post">
-                <p>Заказ</p>
-                <input type="hidden" name="usr_id" value="<?=$_SESSION['usr_id']?>">
-                <input type="text" name="message" placeholder="Цвет лодки">
-                <input type="text" name="model" placeholder="Модель Лодки">
-                <input type="text" name="equipment" placeholder="комплектации">
-                <input type="submit" value="Отправить Заказ">
-            </form>
-        </div>
-	</body>
-</html>
